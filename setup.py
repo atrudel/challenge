@@ -9,7 +9,7 @@ setup(
     description='Code for challenge',
     author='Amric Trudel',
     url='https://github.com/atrudel/challenge',
-    python_requires='>=3.9',
+    python_requires='>=3.7',
     install_requires=requirements,
     packages=find_packages()
 )
