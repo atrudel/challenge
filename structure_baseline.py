@@ -1,42 +1,67 @@
 import csv
+import pickle
 import time
 import numpy as np
 import scipy.sparse as sp
-from sklearn.metrics import accuracy_score, log_loss
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import optim
+from config import CACHE_DIR, DATA_DIR, OUTPUT_DIR
 
-from config import OUTPUT_DIR, DATA_DIR
-
-
-def load_data():
+def load_data(): 
     """
     Function that loads graphs
-    """  
-    graph_indicator = np.loadtxt(f"{DATA_DIR}/graph_indicator.txt", dtype=np.int64)
-    _,graph_size = np.unique(graph_indicator, return_counts=True)
-    
-    edges = np.loadtxt(f"{DATA_DIR}/edgelist.txt", dtype=np.int64, delimiter=",")
-    A = sp.csr_matrix((np.ones(edges.shape[0]), (edges[:,0], edges[:,1])), shape=(graph_indicator.size, graph_indicator.size))
-    A += A.T
-    
-    x = np.loadtxt(f"{DATA_DIR}/node_attributes.txt", delimiter=",")
-    edge_attr = np.loadtxt("edge_attributes.txt", delimiter=",")
-    
-    adj = []
-    features = []
-    edge_features = []
-    idx_n = 0
-    idx_m = 0
-    for i in range(graph_size.size):
-        adj.append(A[idx_n:idx_n+graph_size[i],idx_n:idx_n+graph_size[i]])
-        edge_features.append(edge_attr[idx_m:idx_m+adj[i].nnz,:])
-        features.append(x[idx_n:idx_n+graph_size[i],:])
-        idx_n += graph_size[i]
-        idx_m += adj[i].nnz
+    """
+    try:
+        with open(f'{CACHE_DIR}/adj.pickle', 'rb') as f:
+            adj = pickle.load(f)
+        with open(f'{CACHE_DIR}/features.pickle', 'rb') as f:
+            features = pickle.load(f)
+        with open(f'{CACHE_DIR}/edge_features.pickle', 'rb') as f:
+            edge_features = pickle.load(f)
+        print(f"Loading cached features from {CACHE_DIR}")
+
+    except FileNotFoundError:
+        print("Calculating features and adjacency matrix")
+        graph_indicator = np.loadtxt(f"{DATA_DIR}/graph_indicator.txt", dtype=np.int64)
+        _, graph_size = np.unique(graph_indicator, return_counts=True)
+
+        edges = np.loadtxt(f"{DATA_DIR}/edgelist.txt", dtype=np.int64, delimiter=",")
+        edges_inv = np.vstack((edges[:,1], edges[:,0]))
+        edges = np.vstack((edges, edges_inv.T))
+        s = edges[:,0]*graph_indicator.size + edges[:,1]
+        idx_sort = np.argsort(s)
+        edges = edges[idx_sort,:]
+        edges,idx_unique =  np.unique(edges, axis=0, return_index=True)
+        A = sp.csr_matrix((np.ones(edges.shape[0]), (edges[:,0], edges[:,1])), shape=(graph_indicator.size, graph_indicator.size))
+
+        x = np.loadtxt(f"{DATA_DIR}/node_attributes.txt", delimiter=",")
+        edge_attr = np.loadtxt(f"{DATA_DIR}/edge_attributes.txt", delimiter=",")
+        edge_attr = np.vstack((edge_attr,edge_attr))
+        edge_attr = edge_attr[idx_sort,:]
+        edge_attr = edge_attr[idx_unique,:]
+
+        adj = []
+        features = []
+        edge_features = []
+        idx_n = 0
+        idx_m = 0
+        for i in range(graph_size.size):
+            adj.append(A[idx_n:idx_n+graph_size[i],idx_n:idx_n+graph_size[i]])
+            edge_features.append(edge_attr[idx_m:idx_m+adj[i].nnz,:])
+            features.append(x[idx_n:idx_n+graph_size[i],:])
+            idx_n += graph_size[i]
+            idx_m += adj[i].nnz
+
+        with open(f'{CACHE_DIR}/adj.pickle', 'wb') as f:
+            adj = pickle.dump(adj, f)
+        with open(f'{CACHE_DIR}/features.pickle', 'wb') as f:
+            features = pickle.dump(features, f)
+        with open(f'{CACHE_DIR}/edge_features.pickle', 'wb') as f:
+            edge_features = pickle.dump(edge_features, f)
+        print("Features and adjacency matrix cached for future use.")
 
     return adj, features, edge_features
 
@@ -45,7 +70,7 @@ def normalize_adjacency(A):
     Function that normalizes an adjacency matrix
     """
     n = A.shape[0]
-    A = A + sp.identity(n)
+    A += sp.identity(n)
     degs = A.dot(np.ones(n))
     inv_degs = np.power(degs, -1)
     D = sp.diags(inv_degs)
@@ -105,10 +130,11 @@ class GNN(nn.Module):
         return F.log_softmax(out, dim=1)
 
 # Load graphs
-adj, features, edge_features = load_data() 
+adj, features, edge_features = load_data()
 
 # Normalize adjacency matrices
 adj = [normalize_adjacency(A) for A in adj]
+
 
 # Split data into training and test sets
 adj_train = list()
@@ -117,8 +143,8 @@ y_train = list()
 adj_test = list()
 features_test = list()
 proteins_test = list()
-with open('data/graph_labels.txt', 'r') as f:
-    for i,line in enumerate(f):
+with open(f'{DATA_DIR}/graph_labels.txt', 'r') as f:
+    for i, line in enumerate(f):
         t = line.split(',')
         if len(t[1][:-1]) == 0:
             proteins_test.append(t[0])
@@ -228,7 +254,7 @@ y_pred_proba = torch.exp(y_pred_proba)
 y_pred_proba = y_pred_proba.detach().cpu().numpy()
 
 # Write predictions to a file
-with open(f'{OUTPUT_DIR}/sample_submission.csv', 'w') as csvfile:
+with open(f'{OUTPUT_DIR}/sample_structure_submission.csv', 'w') as csvfile:
     writer = csv.writer(csvfile, delimiter=',')
     lst = list()
     for i in range(18):
