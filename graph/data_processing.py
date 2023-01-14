@@ -116,5 +116,5 @@ def train_test_split(adj, node_features, edge_features):
                 edge_features_train.append(edge_features[i])
                 y_train.append(int(t[1][:-1]))
 
-    return adj_train, node_features_train, edge_features_train, y_train, \
-        adj_test, node_features_test, edge_features_test, proteins_test
+    return (adj_train, node_features_train, edge_features_train), y_train, \
+        (adj_test, node_features_test, edge_features_test), proteins_test
