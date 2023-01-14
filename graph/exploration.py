@@ -68,3 +68,15 @@ def visualize_edge_types(edge_features, labels):
         plt.xticks(rotation=25)
         plt.title(f"Protein type: {prot_id}")
     plt.show()
+
+
+if __name__ == '__main__':
+    from graph.data_processing import load_graph_data, train_test_split
+
+    adj, node_features, edge_features = load_graph_data()
+    adj_train, node_features_train, edge_features_train, y_train, \
+        adj_test, node_features_test, edge_features_test, proteins_test = train_test_split(adj, node_features, edge_features)
+
+    visualize_amino_acids(node_features_train, y_train)
+    visualize_edge_distances(edge_features_train, y_train)
+    visualize_edge_types(edge_features_train, y_train)

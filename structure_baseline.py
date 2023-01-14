@@ -7,18 +7,19 @@ import torch
 import torch.nn as nn
 from torch import optim
 from config import OUTPUT_DIR
-from graph.data import load_graph_data, normalize_adjacency, sparse_mx_to_torch_sparse_tensor, train_test_split
+from graph.data_processing import load_graph_data, normalize_adjacency, sparse_mx_to_torch_sparse_tensor, train_test_split
 from graph.models.baseline import GNN
 
 
 # Load graphs
-adj, features, edge_features = load_graph_data()
+adj, node_features, edge_features = load_graph_data()
 
 # Normalize adjacency matrices
 adj = [normalize_adjacency(A) for A in adj]
 
 # Split data into training and test sets
-adj_train, features_train, y_train, adj_test, features_test, proteins_test = train_test_split(adj, features)
+adj_train, node_features_train, edge_features_train, y_train, \
+    adj_test, node_features_test, edge_features_test,  proteins_test = train_test_split(adj, node_features, edge_features)
 
 # Initialize device
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
@@ -59,7 +60,7 @@ for epoch in range(epochs):
         for j in range(i, min(N_train, i+batch_size)):
             n = adj_train[j].shape[0]
             adj_batch.append(adj_train[j]+sp.identity(n))
-            features_batch.append(features_train[j])
+            features_batch.append(node_features_train[j])
             idx_batch.extend([j-i]*n)
             y_batch.append(y_train[j])
             
@@ -101,7 +102,7 @@ for i in range(0, N_test, batch_size):
     for j in range(i, min(N_test, i+batch_size)):
         n = adj_test[j].shape[0]
         adj_batch.append(adj_test[j]+sp.identity(n))
-        features_batch.append(features_test[j])
+        features_batch.append(node_features_test[j])
         idx_batch.extend([j-i]*n)
         
     adj_batch = sp.block_diag(adj_batch)

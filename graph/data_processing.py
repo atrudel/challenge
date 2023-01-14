@@ -88,22 +88,33 @@ def sparse_mx_to_torch_sparse_tensor(sparse_mx):
     return torch.sparse.FloatTensor(indices, values, shape)
 
 
-def train_test_split(adj, edge_features):
+def train_test_split(adj, node_features, edge_features):
+    # Train
     adj_train = list()
+    node_features_train = list()
     edge_features_train = list()
     y_train = list()
+    # Test
     adj_test = list()
+    node_features_test = list()
     edge_features_test = list()
     proteins_test = list()
+
     with open(f'{DATA_DIR}/graph_labels.txt', 'r') as f:
         for i, line in enumerate(f):
             t = line.split(',')
+            # Unknown label: test set
             if len(t[1][:-1]) == 0:
-                proteins_test.append(t[0])
                 adj_test.append(adj[i])
+                node_features_test.append(node_features[i])
                 edge_features_test.append(edge_features[i])
+                proteins_test.append(t[0])
+            # Known label: train set
             else:
                 adj_train.append(adj[i])
+                node_features_train.append(node_features[i])
                 edge_features_train.append(edge_features[i])
                 y_train.append(int(t[1][:-1]))
-    return adj_train, edge_features_train, y_train, adj_test, edge_features_test, proteins_test
+
+    return adj_train, node_features_train, edge_features_train, y_train, \
+        adj_test, node_features_test, edge_features_test, proteins_test
