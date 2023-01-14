@@ -14,8 +14,8 @@ def load_graph_data():
     try:
         with open(f'{CACHE_DIR}/adj.pickle', 'rb') as f:
             adj = pickle.load(f)
-        with open(f'{CACHE_DIR}/features.pickle', 'rb') as f:
-            features = pickle.load(f)
+        with open(f'{CACHE_DIR}/node_features.pickle', 'rb') as f:
+            node_features = pickle.load(f)
         with open(f'{CACHE_DIR}/edge_features.pickle', 'rb') as f:
             edge_features = pickle.load(f)
         print(f"Loading cached features from {CACHE_DIR}")
@@ -41,26 +41,26 @@ def load_graph_data():
         edge_attr = edge_attr[idx_unique,:]
 
         adj = []
-        features = []
+        node_features = []
         edge_features = []
         idx_n = 0
         idx_m = 0
         for i in range(graph_size.size):
             adj.append(A[idx_n:idx_n+graph_size[i],idx_n:idx_n+graph_size[i]])
             edge_features.append(edge_attr[idx_m:idx_m+adj[i].nnz,:])
-            features.append(x[idx_n:idx_n+graph_size[i],:])
+            node_features.append(x[idx_n:idx_n+graph_size[i],:])
             idx_n += graph_size[i]
             idx_m += adj[i].nnz
 
         with open(f'{CACHE_DIR}/adj.pickle', 'wb') as f:
-            adj = pickle.dump(adj, f)
-        with open(f'{CACHE_DIR}/features.pickle', 'wb') as f:
-            features = pickle.dump(features, f)
+            pickle.dump(adj, f)
+        with open(f'{CACHE_DIR}/node_features.pickle', 'wb') as f:
+            pickle.dump(node_features, f)
         with open(f'{CACHE_DIR}/edge_features.pickle', 'wb') as f:
-            edge_features = pickle.dump(edge_features, f)
+            pickle.dump(edge_features, f)
         print("Features and adjacency matrix cached for future use.")
 
-    return adj, features, edge_features
+    return adj, node_features, edge_features
 
 
 def normalize_adjacency(A):
@@ -88,12 +88,12 @@ def sparse_mx_to_torch_sparse_tensor(sparse_mx):
     return torch.sparse.FloatTensor(indices, values, shape)
 
 
-def train_test_split(adj, features):
+def train_test_split(adj, edge_features):
     adj_train = list()
-    features_train = list()
+    edge_features_train = list()
     y_train = list()
     adj_test = list()
-    features_test = list()
+    edge_features_test = list()
     proteins_test = list()
     with open(f'{DATA_DIR}/graph_labels.txt', 'r') as f:
         for i, line in enumerate(f):
@@ -101,9 +101,9 @@ def train_test_split(adj, features):
             if len(t[1][:-1]) == 0:
                 proteins_test.append(t[0])
                 adj_test.append(adj[i])
-                features_test.append(features[i])
+                edge_features_test.append(edge_features[i])
             else:
                 adj_train.append(adj[i])
-                features_train.append(features[i])
+                edge_features_train.append(edge_features[i])
                 y_train.append(int(t[1][:-1]))
-    return adj_train, features_train, y_train, adj_test, features_test, proteins_test
+    return adj_train, edge_features_train, y_train, adj_test, edge_features_test, proteins_test
