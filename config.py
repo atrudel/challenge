@@ -13,12 +13,12 @@ with working_directory(__file__):
 if KAGGLE:
     DATA_DIR = '/kaggle/input/proteinchallenge'
     OUTPUT_DIR = '/kaggle/working'
-    CACHE_DIR = ROOT_DIR/'cache'
+    CACHE_DIR = '/kaggle/working/cache'
 
 # In a local environment, config variables can be overriden with a .env file at the root of the repository
 else:
     DATA_DIR = config('DATA_DIR', default=ROOT_DIR/'data')
     OUTPUT_DIR = config('OUTPUT_DIR', default=ROOT_DIR/'output')
-    CACHE_DIR = config('CACHE_DIR', default=ROOT_DIR/'cacha')
+    CACHE_DIR = config('CACHE_DIR', default=ROOT_DIR/'cache')
 
 os.makedirs(CACHE_DIR, exist_ok=True)
