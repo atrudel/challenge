@@ -1,7 +1,9 @@
 data
 output
+cache
 .idea
 .env
 **/**/__pycache__
 .DS_Store
 **/*.egg-info
+notebooks
