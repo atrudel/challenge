@@ -126,7 +126,7 @@ def run(hparams, experiment_name=None, seed=42, search=True):
     )
 
     # Model initialization
-    model = GNN(hparams['n_input'], hparams['n_hidden'], hparams['dropout'], 18).to(device)
+    model = GNN(86, hparams['n_hidden'], hparams['dropout'], 18).to(device)
     optimizer = optim.Adam(model.parameters(), lr=hparams['learning_rate'])
     loss_function = nn.CrossEntropyLoss()
 

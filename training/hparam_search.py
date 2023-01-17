@@ -40,7 +40,6 @@ if __name__ == '__main__':
         "epochs": 10,
         "batch_size": tune.choice([32, 64, 128]),
         "n_hidden": tune.choice([56, 64, 72]),
-        "n_input": 86,
         "dropout": tune.uniform(0.2, 0.8),
         "learning_rate": tune.loguniform(1e-4, 1e-1)
     }
