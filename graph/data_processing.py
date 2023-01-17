@@ -1,8 +1,10 @@
 import pickle
+from typing import Union
 
 import numpy as np
 import torch
 from scipy import sparse as sp
+from sklearn.model_selection import train_test_split as sk_train_test_split
 
 from config import CACHE_DIR, DATA_DIR
 
@@ -88,7 +90,12 @@ def sparse_mx_to_torch_sparse_tensor(sparse_mx):
     return torch.sparse.FloatTensor(indices, values, shape)
 
 
-def train_test_split(adj, node_features, edge_features):
+def train_test_split(adj, node_features, edge_features, val_size=0, random_state=42):
+    """Split train and test data. If val_size is greater than 0, it represents the percentage of the train data
+    to return as a validation set. If val_size=0, the train data will not be split between train and val.
+    Features of a given subset are returned in a tuple. Eg, with validation, the output is:
+    (features_train), y_train, (features_val), y_val, (features_test), proteins_test
+    """
     # Train
     adj_train = list()
     node_features_train = list()
@@ -116,5 +123,17 @@ def train_test_split(adj, node_features, edge_features):
                 edge_features_train.append(edge_features[i])
                 y_train.append(int(t[1][:-1]))
 
-    return (adj_train, node_features_train, edge_features_train), y_train, \
-        (adj_test, node_features_test, edge_features_test), proteins_test
+    if isinstance(val_size, float) and val_size > 0:
+        adj_train, adj_val, node_features_train, node_features_val, edge_features_train, edge_features_val, \
+            y_train, y_val = sk_train_test_split(
+                adj_train, node_features_train, edge_features_train, y_train,
+                test_size=val_size, random_state=random_state, stratify=y_train
+        )
+        return (adj_train, node_features_train, edge_features_train), y_train, \
+            (adj_val, node_features_val, edge_features_val), y_val, \
+            (adj_test, node_features_test, edge_features_test), proteins_test
+
+    else:
+        return (adj_train, node_features_train, edge_features_train), y_train, \
+            (adj_test, node_features_test, edge_features_test), proteins_test
+

@@ -8,6 +8,7 @@ from torch import optim
 from graph.data_processing import load_graph_data, normalize_adjacency, sparse_mx_to_torch_sparse_tensor, train_test_split
 from graph.models.baseline import GNN
 from utils.submission import write_submission_file
+from ray import tune
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
@@ -56,11 +57,14 @@ def train(model, optimizer, loss_function, features_train, y_train, hparams):
             correct += torch.sum(preds.eq(y_batch).double())
             loss.backward()
             optimizer.step()
+            loss_train = train_loss / count
+            acc_train = correct / count
+            tune.track.log(acc_train=acc_train)
 
         if epoch % 5 == 0:
             print('Epoch: {:03d}'.format(epoch+1),
-                  'loss_train: {:.4f}'.format(train_loss / count),
-                  'acc_train: {:.4f}'.format(correct / count),
+                  'loss_train: {:.4f}'.format(loss_train),
+                  'acc_train: {:.4f}'.format(acc_train),
                   'time: {:.4f}s'.format(time.time() - t))
 
 def test_predic_proba(model, features_test, hparams):
@@ -100,17 +104,7 @@ def test_predic_proba(model, features_test, hparams):
     y_pred_proba = y_pred_proba.detach().cpu().numpy()
     return y_pred_proba
 
-
-if __name__ == '__main__':
-    hparams = {
-        'epochs': 50,
-        'batch_size': 64,
-        'n_hidden': 64,
-        'n_input': 86,
-        'dropout': 0.2,
-        'learning_rate': 0.001,
-    }
-
+def launch_experiment(hparams):
     n_class = 18
     adj, node_features, edge_features = load_graph_data()
     adj = [normalize_adjacency(A) for A in adj]
@@ -120,5 +114,20 @@ if __name__ == '__main__':
     optimizer = optim.Adam(model.parameters(), lr=hparams['learning_rate'])
     loss_function = nn.CrossEntropyLoss()
     train(model, optimizer, loss_function, features_train, y_train, hparams)
+    return model
+
+if __name__ == '__main__':
+    hparams = {
+        'epochs': 10,
+        'batch_size': 64,
+        'n_hidden': 64,
+        'n_input': 86,
+        'dropout': 0.2,
+        'learning_rate': 0.001,
+    }
+    model = launch_experiment(hparams)
+    adj, node_features, edge_features = load_graph_data()
+    adj = [normalize_adjacency(A) for A in adj]
+    features_train, y_train, features_test, proteins_test = train_test_split(adj, node_features, edge_features)
     y_pred_proba = test_predic_proba(model, features_test, hparams)
     write_submission_file(y_pred_proba, proteins_test, 'sample_structure_submission.csv')
