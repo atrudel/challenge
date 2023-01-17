@@ -45,4 +45,4 @@ if __name__ == '__main__':
         "learning_rate": tune.loguniform(1e-4, 1e-1)
     }
     resources = {"cpu": 10} # Add GPU
-    launch_ray_tune(config, run, num_samples, resources)
+    best_result = launch_ray_tune(config, run, num_samples, resources)
