@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 
 import numpy as np
-import pandas as pd
 
 
 def visualize_amino_acids(node_features, labels):
@@ -71,7 +70,7 @@ def visualize_edge_types(edge_features, labels):
 
 
 if __name__ == '__main__':
-    from graph.data_processing import load_graph_data, train_test_split
+    from graph.data_handling.baseline_data_processing import load_graph_data, train_test_split
 
     adj, node_features, edge_features = load_graph_data()
     features_train, y_train, features_test, proteins_test = train_test_split(adj, node_features, edge_features)

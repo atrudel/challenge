@@ -12,7 +12,7 @@ with open(f'{DATA_DIR}/sequences.txt', 'r') as f:
     for line in f:
         sequences.append(line[:-1])
 
-# Split data into training and test sets
+# Split data_handling into training and test sets
 sequences_train = list()
 sequences_test = list()
 proteins_test = list()

@@ -7,7 +7,7 @@ from tqdm import tqdm
 import scipy.sparse as sp
 from torch import optim
 
-from graph.data_processing import load_graph_data, normalize_adjacency, sparse_mx_to_torch_sparse_tensor, train_test_split
+from graph.data_handling.baseline_data_processing import load_graph_data, normalize_adjacency, sparse_mx_to_torch_sparse_tensor, train_test_split
 import torch
 import torch.nn as nn
 from config import device, CHECKPOINT_DIR

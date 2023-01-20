@@ -5,7 +5,7 @@ import scipy.sparse as sp
 import torch
 import torch.nn as nn
 from torch import optim
-from graph.data_processing import load_graph_data, normalize_adjacency, sparse_mx_to_torch_sparse_tensor, train_test_split
+from graph.data_handling.baseline_data_processing import load_graph_data, normalize_adjacency, sparse_mx_to_torch_sparse_tensor, train_test_split
 from graph.models.baseline import GNN
 from utils.submission import write_submission_file
 from ray import tune
