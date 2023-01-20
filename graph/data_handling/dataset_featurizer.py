@@ -3,10 +3,12 @@
 import numpy as np
 import torch
 from torch_geometric.data import InMemoryDataset, Data
+from torch_geometric.loader import DataLoader
+from torch.utils.data import Subset
 
 from config import DATA_DIR
 from graph.data_handling.baseline_data_processing import load_graph_data, train_test_split
-
+from sklearn.model_selection import train_test_split as sk_train_test_split
 
 class ProteinDataset(InMemoryDataset):
     def __init__(self, root=DATA_DIR, test=False, transform=None, pre_transform=None):
@@ -50,25 +52,43 @@ class ProteinDataset(InMemoryDataset):
         y = [None] * len(adj) if y is None else y
         graphs = []
         for gr_adj, gr_node_features, gr_edge_features, gr_y in zip(adj, node_features, edge_features, y):
+
+            x = torch.from_numpy(gr_node_features).float()
             M = gr_adj.tocoo().astype(int)
             indices = torch.from_numpy(np.vstack((M.row, M.col))).long()
             edge_distances = torch.from_numpy(gr_edge_features[:,0]).float()
             edge_type = torch.from_numpy(
                 np.argmax(gr_edge_features[:,1:], axis=1) # Todo: do this less naively
             ).long()
+            y = torch.tensor(gr_y) if gr_y is not None else None
+
             graph = Data(
-                x=torch.from_numpy(gr_node_features).float(),
+                x=x,
                 edge_index=indices,
                 edge_attr=edge_distances,
                 edge_type=edge_type,
-                y=torch.tensor(gr_y)
+                y=y
             )
             graphs.append(graph)
         return graphs
 
+def get_train_val_dataloaders(batch_size, val_size=0.25, random_state=None):
+    full_train_dataset = ProteinDataset(test=False)
+    train_indices, val_indices, _, _  = sk_train_test_split(
+        range(len(full_train_dataset)),
+        full_train_dataset.data.y,
+        stratify=full_train_dataset.data.y,
+        test_size=val_size,
+        random_state=random_state
+    )
+    train_subset = Subset(full_train_dataset, train_indices)
+    val_subset = Subset(full_train_dataset, val_indices)
 
+    train_dataloader = DataLoader(train_subset, batch_size=batch_size, shuffle=True)
+    val_dataloader = DataLoader(val_subset, batch_size=batch_size, shuffle=False)
+    return train_dataloader, val_dataloader
 
-
-if __name__ == '__main__':
-    dataset_train = ProteinDataset(test=False)
-    dataset_test = ProteinDataset(test=True)
+def get_full_train_dataloader(batch_size):
+    return DataLoader(ProteinDataset(test=False), batch_size=batch_size, shuffle=True)
+def get_test_dataloader(batch_size):
+    return DataLoader(ProteinDataset(test=True), batch_size=batch_size, shuffle=False)
