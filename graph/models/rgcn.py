@@ -1,15 +1,12 @@
 import torch
-import torch.nn.functional as F
 import torch.nn as nn
-from torchsummary import summary
-
-from torch_geometric.datasets import Entities
-from torch_geometric.nn import FastRGCNConv, RGCNConv
+import torch.nn.functional as F
 from torch_geometric.loader import DataLoader
-from config import device
-from graph.data_handling.dataset_featurizer import ProteinDataset
+from torch_geometric.nn import RGCNConv
 from torch_geometric.nn import global_add_pool
 
+from config import device
+from graph.data_handling.dataset_featurizer import ProteinDataset
 
 N_NODE_FEATURES = 86
 NUM_RELATIONS = 4
@@ -47,7 +44,8 @@ class RGCN(torch.nn.Module):
         self.fc = nn.Linear(hparams['hidden_dim'], N_CLASSES)
         self.dropout = nn.Dropout(hparams['dropout'])
 
-    def forward(self, x, edge_index, edge_type, batch):
+    def forward(self, data):
+        x, edge_index, edge_type, batch = data.x, data.edge_index, data.edge_type, data.batch
         # First conv layer
         x = F.relu(self.conv1(x, edge_index, edge_type))
         # Second conv layer
@@ -67,7 +65,7 @@ def train(data_loader: DataLoader, model: RGCN, optimizer, criterion):
     for data in data_loader:
         data = data.to(device)
         optimizer.zero_grad()
-        out = model(data.x, data.edge_index, data.edge_type, data.batch)
+        out = model(data)
         loss = criterion(out, data.y)
         total_loss += loss.item() * data.num_graphs
         loss.backward()
