@@ -153,9 +153,8 @@ if __name__ == '__main__':
     # Example
     from graph.models.rgcn import RGCN, hparams
     from utils.submission import load_model, generate_predictions
-    hparams['epochs'] = 2
-    # model = RGCN(hparams)
-    # best_val_loss = launch_experiment(model, hparams, experiment_name='test', seed=42)
+    model = RGCN(hparams)
+    best_val_loss = launch_experiment(model, hparams, experiment_name='test', seed=42)
     # train_without_validation(model, hparams, 1, 'test_2023-01-20_22h43m43s')
 
     model, hparams, experiment_name = load_model(RGCN, '/Users/amrictrudel/Documents/Repos/challenge/checkpoints/test_2023-01-20_22h43m43s/FULL-model_epoch=0_train-loss=164.152.pth')

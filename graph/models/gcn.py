@@ -33,7 +33,8 @@ class RGCN(torch.nn.Module):
                 num_blocks=hparams['num_blocks'],
                 aggr=hparams['aggr'],
             )
-        self.conv2 = RGCNConv(
+        self.convs = [
+            RGCNConv(
                 in_channels=hparams['hidden_dim'],
                 out_channels=N_CLASSES,
                 num_relations=NUM_RELATIONS,
@@ -41,6 +42,8 @@ class RGCN(torch.nn.Module):
                 num_blocks=hparams['num_blocks'],
                 aggr=hparams['aggr'],
             )
+        ]
+        self.conv2 =
 
     def forward(self, x, edge_index, edge_type):
         x = F.relu(self.conv1(x, edge_index, edge_type))
