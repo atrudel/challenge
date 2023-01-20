@@ -1,6 +1,6 @@
 from ray import tune
 from ray.tune.schedulers import ASHAScheduler
-from training.model_training import run
+from training.model_training_baseline import run
 
 
 

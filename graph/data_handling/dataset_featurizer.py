@@ -42,16 +42,17 @@ class ProteinDataset(InMemoryDataset):
             adj, node_features, edge_features, val_size=0
         )
         if self.test:
-            data_list = self.build_graphs(adj_test, node_features_test, edge_features_test)
+            data_list = self.build_graphs(adj_test, node_features_test, edge_features_test, prot_names=proteins_test)
         else:
-            data_list = self.build_graphs(adj_train, node_features_train, edge_features_train, y_train)
+            data_list = self.build_graphs(adj_train, node_features_train, edge_features_train, y=y_train)
         data, slices = self.collate(data_list)
         torch.save((data, slices), self.processed_paths[0])
 
-    def build_graphs(self, adj, node_features, edge_features, y=None):
+    def build_graphs(self, adj, node_features, edge_features, y=None, prot_names=None):
         y = [None] * len(adj) if y is None else y
+        prot_names = [None] * len(adj) if prot_names is None else prot_names
         graphs = []
-        for gr_adj, gr_node_features, gr_edge_features, gr_y in zip(adj, node_features, edge_features, y):
+        for gr_adj, gr_node_features, gr_edge_features, gr_y, gr_prot_name in zip(adj, node_features, edge_features, y, prot_names):
 
             x = torch.from_numpy(gr_node_features).float()
             M = gr_adj.tocoo().astype(int)
@@ -67,7 +68,8 @@ class ProteinDataset(InMemoryDataset):
                 edge_index=indices,
                 edge_attr=edge_distances,
                 edge_type=edge_type,
-                y=y
+                y=y,
+                protein_names=gr_prot_name
             )
             graphs.append(graph)
         return graphs
@@ -92,3 +94,4 @@ def get_full_train_dataloader(batch_size):
     return DataLoader(ProteinDataset(test=False), batch_size=batch_size, shuffle=True)
 def get_test_dataloader(batch_size):
     return DataLoader(ProteinDataset(test=True), batch_size=batch_size, shuffle=False)
+
