@@ -12,7 +12,7 @@ with working_directory(__file__):
 
 # Specific config variables for Kaggle environment
 if KAGGLE:
-    DATA_DIR = '/kaggle/input/proteinchallenge'
+    DATA_DIR = '/kaggle/working/data'
     OUTPUT_DIR = '/kaggle/working'
     CACHE_DIR = '/kaggle/working/cache'
     CHECKPOINT_DIR = '/kaggle/working/checkpoints'
