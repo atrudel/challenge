@@ -48,7 +48,7 @@ def validate(epoch, model, loss_function, data_loader, hparams, search=False):
     model.eval()
     with torch.no_grad():
         for batch in data_loader:
-            output = model(batch)
+            output = model(batch.to(device))
             loss = loss_function(output, batch.y)
             val_loss += loss.detach().cpu().item() * output.size(0)
             count += output.size(0)
