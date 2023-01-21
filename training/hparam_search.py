@@ -1,10 +1,9 @@
-from ray import tune
-from ray.tune.schedulers import ASHAScheduler
-from training.model_training_baseline import run
-
 
 
 def launch_ray_tune(config, train_function, num_samples, resources):
+    from ray import tune
+    from ray.tune.schedulers import ASHAScheduler
+
     max_num_epochs = config['epochs']
 
     scheduler = ASHAScheduler(
@@ -34,6 +33,7 @@ def launch_ray_tune(config, train_function, num_samples, resources):
 
 
 if __name__ == '__main__':
+    from ray import tune
     from graph.models.rgcn import RGCN
     from training.model_training_torch_geometric import launch_experiment
 
