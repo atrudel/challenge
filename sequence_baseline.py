@@ -6,26 +6,31 @@ from sklearn.linear_model import LogisticRegression
 from config import DATA_DIR, OUTPUT_DIR
 
 
-# Read sequences
-sequences = list()
-with open(f'{DATA_DIR}/sequences.txt', 'r') as f:
-    for line in f:
-        sequences.append(line[:-1])
+def load_sequence_data():
+    global sequences_train, sequences_test, proteins_test, y_train, i
+    # Read sequences
+    sequences = list()
+    with open(f'{DATA_DIR}/sequences.txt', 'r') as f:
+        for line in f:
+            sequences.append(line[:-1])
+    # Split data_handling into training and test sets
+    sequences_train = list()
+    sequences_test = list()
+    proteins_test = list()
+    y_train = list()
+    with open(f'{DATA_DIR}/graph_labels.txt', 'r') as f:
+        for i, line in enumerate(f):
+            t = line.split(',')
+            if len(t[1][:-1]) == 0:
+                proteins_test.append(t[0])
+                sequences_test.append(sequences[i])
+            else:
+                sequences_train.append(sequences[i])
+                y_train.append(int(t[1][:-1]))
+    return sequences_train, y_train, sequences_test, proteins_test
 
-# Split data into training and test sets
-sequences_train = list()
-sequences_test = list()
-proteins_test = list()
-y_train = list()
-with open(f'{DATA_DIR}/graph_labels.txt', 'r') as f:
-    for i,line in enumerate(f):
-        t = line.split(',')
-        if len(t[1][:-1]) == 0:
-            proteins_test.append(t[0])
-            sequences_test.append(sequences[i])
-        else:
-            sequences_train.append(sequences[i])
-            y_train.append(int(t[1][:-1]))
+
+sequences_train, y_train, sequences_test, proteins_test = load_sequence_data()
 
 # Map sequences to 
 vec = TfidfVectorizer(analyzer='char', ngram_range=(1, 3))

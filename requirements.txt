@@ -6,3 +6,6 @@ torch
 matplotlib
 datatest
 ray[tune]
+torch-geometric
+torch-sparse
+torch-scatter

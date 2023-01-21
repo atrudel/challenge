@@ -5,10 +5,10 @@ import scipy.sparse as sp
 import torch
 import torch.nn as nn
 from torch import optim
-from graph.data_processing import load_graph_data, normalize_adjacency, sparse_mx_to_torch_sparse_tensor, train_test_split
+from graph.data_handling.baseline_data_processing import load_graph_data, normalize_adjacency, sparse_mx_to_torch_sparse_tensor, train_test_split
 from graph.models.baseline import GNN
 from utils.submission import write_submission_file
-from ray import tune
+
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
@@ -59,7 +59,7 @@ def train(model, optimizer, loss_function, features_train, y_train, hparams):
             optimizer.step()
             loss_train = train_loss / count
             acc_train = correct / count
-            tune.track.log(acc_train=acc_train)
+
 
         if epoch % 5 == 0:
             print('Epoch: {:03d}'.format(epoch+1),

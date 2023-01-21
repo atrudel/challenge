@@ -91,8 +91,8 @@ def sparse_mx_to_torch_sparse_tensor(sparse_mx):
 
 
 def train_test_split(adj, node_features, edge_features, val_size=0, random_state=42):
-    """Split train and test data. If val_size is greater than 0, it represents the percentage of the train data
-    to return as a validation set. If val_size=0, the train data will not be split between train and val.
+    """Split train and test data_handling. If val_size is greater than 0, it represents the percentage of the train data_handling
+    to return as a validation set. If val_size=0, the train data_handling will not be split between train and val.
     Features of a given subset are returned in a tuple. Eg, with validation, the output is:
     (features_train), y_train, (features_val), y_val, (features_test), proteins_test
     """
@@ -137,3 +137,7 @@ def train_test_split(adj, node_features, edge_features, val_size=0, random_state
         return (adj_train, node_features_train, edge_features_train), y_train, \
             (adj_test, node_features_test, edge_features_test), proteins_test
 
+
+if __name__ == '__main__':
+    adj, node_features, edge_features = load_graph_data()
+    a=1

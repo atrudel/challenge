@@ -1,10 +1,9 @@
-from ray import tune
-from ray.tune.schedulers import ASHAScheduler
-from training.model_training import run
-
 
 
 def launch_ray_tune(config, train_function, num_samples, resources):
+    from ray import tune
+    from ray.tune.schedulers import ASHAScheduler
+
     max_num_epochs = config['epochs']
 
     scheduler = ASHAScheduler(
@@ -34,14 +33,32 @@ def launch_ray_tune(config, train_function, num_samples, resources):
 
 
 if __name__ == '__main__':
-    num_samples = 10
+    from ray import tune
+    from graph.models.rgcn import RGCN
+    from training.model_training_torch_geometric import launch_experiment
 
-    config = {
-        "epochs": 10,
-        "batch_size": tune.choice([32, 64, 128]),
-        "n_hidden": tune.choice([56, 64, 72]),
-        "dropout": tune.uniform(0.2, 0.8),
-        "learning_rate": tune.loguniform(1e-4, 1e-1)
+    num_samples = 40
+    hparams = {
+        'epochs': 10,
+        'batch_size': tune.choice([32, 64, 128]),
+        'learning_rate': tune.loguniform(1e-4, 1e-1),
+        'num_hidden_layers': tune.choice([0, 1, 3, 5]),
+        'num_node_features': 86,
+        'num_relations': 4,
+        'num_bases': tune.choice([10, 20, 30]),
+        'num_blocks': None,
+        'hidden_dim': tune.choice([56, 64, 72]),
+        'dropout': 0.2,
+        'aggr': 'mean'
     }
-    resources = {"cpu": 10} # Add GPU
-    best_result = launch_ray_tune(config, run, num_samples, resources)
+    resources = {"cpu": 1}
+
+    def train_rgcn(hparams):
+        model = RGCN(hparams)
+        best_val_loss = launch_experiment(model, hparams, seed=None, search=True)
+        return best_val_loss
+
+
+    best_result = launch_ray_tune(hparams, train_rgcn, num_samples, resources)
+    print(f"Best_result")
+    print(best_result)
