@@ -34,14 +34,28 @@ def launch_ray_tune(config, train_function, num_samples, resources):
 
 
 if __name__ == '__main__':
-    num_samples = 10
+    from graph.models.rgcn import RGCN
+    from training.model_training_torch_geometric import launch_experiment
 
-    config = {
-        "epochs": 10,
-        "batch_size": tune.choice([32, 64, 128]),
-        "n_hidden": tune.choice([56, 64, 72]),
-        "dropout": tune.uniform(0.2, 0.8),
-        "learning_rate": tune.loguniform(1e-4, 1e-1)
+    num_samples = 10
+    hparams = {
+        'epochs': 10,
+        'batch_size': tune.choice([32, 64, 128]),
+        'learning_rate': tune.loguniform(1e-4, 1e-1),
+        'num_node_features': 86,
+        'num_relations': 4,
+        'num_bases': 30,
+        'num_blocks': None,
+        'hidden_dim': tune.choice([56, 64, 72]),
+        'dropout': 0.2,
+        'aggr': 'mean'
     }
-    resources = {"cpu": 10} # Add GPU
-    best_result = launch_ray_tune(config, run, num_samples, resources)
+    resources = {"cpu": 10}
+
+    def train_rgcn(hparams):
+        model = RGCN(hparams)
+        best_val_loss = launch_experiment(model, hparams, seed=None, search=True)
+        return best_val_loss
+
+
+    best_result = launch_ray_tune(hparams, run, num_samples, resources)

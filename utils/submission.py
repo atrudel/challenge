@@ -50,3 +50,9 @@ def load_model(model_class, model_path):
     hparams = checkpoint['hparams']
     experiment_name = checkpoint['experiment_name']
     return model, hparams, experiment_name
+
+if __name__ == '__main__':
+    from graph.models.rgcn import RGCN
+    model_path = "checkpoints/test_2023-01-20_23h47m33s/model_epoch=38_val-loss=1.810.pth"
+    model, hparams, experiment_name = load_model(RGCN, model_path)
+    generate_predictions(model, experiment_name)

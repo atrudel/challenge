@@ -1,19 +1,15 @@
 import os
 from datetime import datetime
 
-import numpy as np
 import pytz
-from tqdm import tqdm
-import scipy.sparse as sp
-from torch import optim
-from graph.data_handling.dataset_featurizer import get_train_val_dataloaders, get_full_train_dataloader
-from graph.data_handling.baseline_data_processing import load_graph_data, normalize_adjacency, sparse_mx_to_torch_sparse_tensor, train_test_split
 import torch
 import torch.nn as nn
-from config import device, CHECKPOINT_DIR
 from ray.air import session
+from torch import optim
+from tqdm import tqdm
 
-from graph.models.baseline import GNN
+from config import device, CHECKPOINT_DIR
+from graph.data_handling.dataset_featurizer import get_train_val_dataloaders, get_full_train_dataloader
 
 
 def train(epoch, model, loss_function, optimizer, data_loader, hparams, search=False):
@@ -27,7 +23,7 @@ def train(epoch, model, loss_function, optimizer, data_loader, hparams, search=F
         tepoch.set_description(f"Epoch {epoch}")
         for i_batch, batch in enumerate(tepoch):
             optimizer.zero_grad()
-            output = model(batch)
+            output = model(batch.to(device))
             loss = loss_function(output, batch.y)
             train_loss += loss.detach().cpu().item() * output.size(0)
             count += output.size(0)
@@ -76,9 +72,11 @@ def launch_experiment(model, hparams, experiment_name=None, seed=None, search=Fa
             experiment_name = "experiment"
         experiment_name += f"_{datetime.now(tz=pytz.timezone('Europe/Paris')).strftime('%Y-%m-%d_%Hh%Mm%Ss')}"
         print(f"Launching new experiment {experiment_name}")
+        print(f"Using {device}")
 
     train_data_loader, val_data_loader = get_train_val_dataloaders(hparams['batch_size'], val_size=0.25, random_state=seed)
 
+    model.to(device)
     optimizer = optim.Adam(model.parameters(), lr=hparams['learning_rate'])
     loss_function = nn.CrossEntropyLoss()
 
@@ -99,6 +97,7 @@ def launch_experiment(model, hparams, experiment_name=None, seed=None, search=Fa
 
         # Save checkpoint if val loss improved and if not in hyperaparameter search
         elif val_loss < best_val_loss:
+            best_val_loss = val_loss
             save_dir = f"{CHECKPOINT_DIR}/{experiment_name}"
             os.makedirs(save_dir, exist_ok=True)
             save_path = f"{save_dir}/model_epoch={epoch}_val-loss={val_loss:.3f}.pth"
@@ -124,6 +123,7 @@ def train_without_validation(model, hparams, epochs, experiment_name=None, seed=
     print(f"Launching full training for {epochs} epochs: {experiment_name}")
 
     train_data_loader = get_full_train_dataloader(hparams['batch_size'])
+    model.to(device)
     optimizer = optim.Adam(model.parameters(), lr=hparams['learning_rate'])
     loss_function = nn.CrossEntropyLoss()
 
@@ -152,10 +152,12 @@ def train_without_validation(model, hparams, epochs, experiment_name=None, seed=
 if __name__ == '__main__':
     # Example
     from graph.models.rgcn import RGCN, hparams
-    from utils.submission import load_model, generate_predictions
+    from utils.submission import load_model
+
     model = RGCN(hparams)
-    best_val_loss = launch_experiment(model, hparams, experiment_name='test', seed=42)
+    experiment_name = 'test'
+    # model, hparams, experiment_name = load_model(RGCN, '/Users/amrictrudel/Documents/Repos/challenge/checkpoints/test_2023-01-20_23h47m33s/model_epoch=49_val-loss=1.942.pth')
+    best_val_loss = launch_experiment(model, hparams, experiment_name=experiment_name, seed=42)
     # train_without_validation(model, hparams, 1, 'test_2023-01-20_22h43m43s')
 
-    model, hparams, experiment_name = load_model(RGCN, '/Users/amrictrudel/Documents/Repos/challenge/checkpoints/test_2023-01-20_22h43m43s/FULL-model_epoch=0_train-loss=164.152.pth')
-    generate_predictions(model, experiment_name)
+    # generate_predictions(model, experiment_name)
