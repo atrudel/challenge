@@ -37,20 +37,21 @@ if __name__ == '__main__':
     from graph.models.rgcn import RGCN
     from training.model_training_torch_geometric import launch_experiment
 
-    num_samples = 10
+    num_samples = 40
     hparams = {
         'epochs': 10,
         'batch_size': tune.choice([32, 64, 128]),
         'learning_rate': tune.loguniform(1e-4, 1e-1),
+        'num_hidden_layers': tune.choice([0, 1, 3, 5]),
         'num_node_features': 86,
         'num_relations': 4,
-        'num_bases': 30,
+        'num_bases': tune.choice([10, 20, 30]),
         'num_blocks': None,
         'hidden_dim': tune.choice([56, 64, 72]),
         'dropout': 0.2,
         'aggr': 'mean'
     }
-    resources = {"cpu": 10}
+    resources = {"cpu": 1}
 
     def train_rgcn(hparams):
         model = RGCN(hparams)
@@ -58,4 +59,6 @@ if __name__ == '__main__':
         return best_val_loss
 
 
-    best_result = launch_ray_tune(hparams, run, num_samples, resources)
+    best_result = launch_ray_tune(hparams, train_rgcn, num_samples, resources)
+    print(f"Best_result")
+    print(best_result)
