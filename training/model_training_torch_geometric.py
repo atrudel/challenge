@@ -14,6 +14,7 @@ from graph.data_handling.dataset_featurizer import get_train_val_dataloaders, ge
 
 def train(epoch, model, loss_function, optimizer, data_loader, hparams, search=False):
     model.train()
+    model.to(device)
     train_loss = 0
     correct = 0
     count = 0
@@ -46,6 +47,7 @@ def validate(epoch, model, loss_function, data_loader, hparams, search=False):
     count = 0
 
     model.eval()
+    model.to(device)
     with torch.no_grad():
         for batch in data_loader:
             output = model(batch.to(device))
