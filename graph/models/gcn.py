@@ -22,24 +22,25 @@ hparams = {
 class GCN(torch.nn.Module):
     def __init__(self, hparams):
         super().__init__()
+        self.dropout = nn.Dropout(hparams['dropout'])
         self.first_conv = GCNConv(
                 in_channels=-1,
                 out_channels=hparams['hidden_dim'],
             )
-        self.hidden_layers = [
+        self.hidden_layers = nn.Sequential(*[
             GCNConv(
                 in_channels=hparams['hidden_dim'],
                 out_channels=hparams['hidden_dim'],
-            )
-            for _ in range(hparams['num_hidden_layers'])
-        ]
+            ),
+            nn.ReLU(),
+            self.dropout()] * hparams['num_hidden_layers'])
+
         self.last_conv = GCNConv(
                 in_channels=hparams['hidden_dim'],
                 out_channels=hparams['hidden_dim'],
             )
         self.fc1 = nn.Linear(hparams['hidden_dim'], hparams['hidden_dim'])
         self.fc2 = nn.Linear(hparams['hidden_dim'], N_CLASSES)
-        self.dropout = nn.Dropout(hparams['dropout'])
         self.bn = nn.BatchNorm1d(hparams['hidden_dim'])
         self.relu = nn.ReLU()
 
@@ -52,10 +53,8 @@ class GCN(torch.nn.Module):
         x = self.dropout(x)
 
         # Hidden layers
-        for hidden_conv in self.hidden_layers:
-            print(x.device)
-            x = self.relu(hidden_conv(x, edge_index))
-            x = self.dropout(x)
+        x = self.hidden_layers(x, edge_index)
+
 
         # Last conv layer
         x = self.last_conv(x, edge_index)
