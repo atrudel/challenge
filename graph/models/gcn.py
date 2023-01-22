@@ -41,18 +41,20 @@ class GCN(torch.nn.Module):
         self.fc2 = nn.Linear(hparams['hidden_dim'], N_CLASSES)
         self.dropout = nn.Dropout(hparams['dropout'])
         self.bn = nn.BatchNorm1d(hparams['hidden_dim'])
+        self.relu = nn.ReLU()
 
 
     def forward(self, data):
         x, edge_index, batch = data.x, data.edge_index, data.batch
 
         # First conv layer
-        x = F.relu(self.first_conv(x, edge_index))
+        x = self.relu(self.first_conv(x, edge_index))
         x = self.dropout(x)
 
         # Hidden layers
         for hidden_conv in self.hidden_layers:
-            x = F.relu(hidden_conv(x, edge_index))
+            print(x.device, print(hidden_conv.device))
+            x = self.relu(hidden_conv(x, edge_index))
             x = self.dropout(x)
 
         # Last conv layer
