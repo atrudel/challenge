@@ -22,12 +22,6 @@ def load_graph_data(use_bert_embedding=False):
         with open(f'{CACHE_DIR}/edge_features.pickle', 'rb') as f:
             edge_features = pickle.load(f)
 
-        if use_bert_embedding:
-            sequences = list()
-            with open(f'{DATA_DIR}/sequences.txt', 'r') as f:
-                for line in f:
-                    sequences.append(line[:-1])
-
         print(f"Loading cached features from {CACHE_DIR}")
 
     except FileNotFoundError:
@@ -50,15 +44,22 @@ def load_graph_data(use_bert_embedding=False):
         edge_attr = edge_attr[idx_unique,:]
 
         if use_bert_embedding:
+            # Read sequences
+            sequences = list()
+            with open(f'{DATA_DIR}/sequences.txt', 'r') as f:
+                for line in f:
+                    sequences.append(line[:-1])
+            # Add space to sequences to tokenize
+            sequences_space = []
+            for seq in sequences:
+                sequences_space.append(' '.join(seq))
+        
             # Load ProtBERT model and tokenizer
             model = BertModel.from_pretrained("Rostlab/prot_bert")
             model.cuda()
             model.eval()
             tokenizer = BertTokenizer.from_pretrained("Rostlab/prot_bert", do_lower_case=False)
-            # Add space to sequences to tokenize
-            sequences_space = []
-            for seq in sequences:
-                sequences_space.append(' '.join(seq))
+            
         else:
             # Load txt file
             x = np.loadtxt(f"{DATA_DIR}/node_attributes.txt", delimiter=",")
