@@ -50,9 +50,6 @@ def load_graph_data(use_bert_embedding=False):
         edge_attr = edge_attr[idx_unique,:]
 
         if use_bert_embedding:
-            # Load txt file
-            x = np.loadtxt(f"{DATA_DIR}/node_attributes.txt", delimiter=",")
-        else:
             # Load ProtBERT model and tokenizer
             model = BertModel.from_pretrained("Rostlab/prot_bert")
             model.cuda()
@@ -62,6 +59,9 @@ def load_graph_data(use_bert_embedding=False):
             sequences_space = []
             for seq in sequences:
                 sequences_space.append(' '.join(seq))
+        else:
+            # Load txt file
+            x = np.loadtxt(f"{DATA_DIR}/node_attributes.txt", delimiter=",")
 
         adj = []
         node_features = []
@@ -71,12 +71,9 @@ def load_graph_data(use_bert_embedding=False):
         for i in range(graph_size.size):
             adj.append(A[idx_n:idx_n+graph_size[i],idx_n:idx_n+graph_size[i]])
             edge_features.append(edge_attr[idx_m:idx_m+adj[i].nnz,:])
-
-            # Node embeddings from raw data
+    
             if use_bert_embedding:
-                node_features.append(x[idx_n:idx_n+graph_size[i],:])
-            # Create embeddings with ProtBERT
-            else:
+                # Create embeddings with ProtBERT               
                 with torch.no_grad():
                     # Get sequences
                     seq_batch = [sequences_space[i]]
@@ -88,8 +85,11 @@ def load_graph_data(use_bert_embedding=False):
                     output = model(input_ids, attention_mask=attention_mask)
                     # Remove Start of sentence and End of sentence tokens
                     embedding = output.last_hidden_state[:, 1:-1, :].detach().cpu().numpy().squeeze()
-                    node_features.append(embedding)
-
+                    node_features.append(embedding)         
+            else:
+                # Node embeddings from raw data
+                node_features.append(x[idx_n:idx_n+graph_size[i],:])
+                
             idx_n += graph_size[i]
             idx_m += adj[i].nnz
 
