@@ -26,5 +26,6 @@ else:
 
 os.makedirs(CACHE_DIR, exist_ok=True)
 os.makedirs(CHECKPOINT_DIR, exist_ok=True)
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")

@@ -60,15 +60,16 @@ class ProteinDataset(InMemoryDataset):
             M = gr_adj.tocoo().astype(int)
             indices = torch.from_numpy(np.vstack((M.row, M.col))).long()
             edge_attributes = torch.from_numpy(gr_edge_features).float()
-            # edge_type = torch.from_numpy(
-            #     np.argmax(gr_edge_features[:,1:], axis=1) # Todo: do this less naively
-            # ).long()
+            edge_type = torch.from_numpy(
+                np.argmax(np.flip(gr_edge_features[:,1:]), axis=1)
+            ).long()
             y = torch.tensor(gr_y) if gr_y is not None else None
 
             graph = Data(
                 x=x,
                 edge_index=indices,
                 edge_attr=edge_attributes,
+                edge_type=edge_type,
                 y=y,
                 protein_names=gr_prot_name
             )
