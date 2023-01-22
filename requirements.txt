@@ -9,3 +9,7 @@ ray[tune]
 torch-geometric
 torch-sparse
 torch-scatter
+yacs
+pytorch_lightning
+GPUtil
+transformers
