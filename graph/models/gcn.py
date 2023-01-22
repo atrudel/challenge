@@ -19,7 +19,7 @@ hparams = {
 
 
 class GCN(torch.nn.Module):
-    def __init__(self):
+    def __init__(self, hparams):
         super().__init__()
         self.first_conv = GCNConv(
                 in_channels=-1,
