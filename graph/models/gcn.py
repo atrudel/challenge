@@ -44,7 +44,7 @@ class GCN(torch.nn.Module):
 
 
     def forward(self, data):
-        x, edge_index, edge_type, batch = data.x, data.edge_index, data.batch
+        x, edge_index, edge_type, batch = data.x, data.edge_index, data.edge_type, data.batch
 
         # First conv layer
         x = F.relu(self.first_conv(x, edge_index, edge_type))
