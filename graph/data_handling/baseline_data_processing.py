@@ -6,6 +6,7 @@ import torch
 from scipy import sparse as sp
 from sklearn.model_selection import train_test_split as sk_train_test_split
 from transformers import BertModel, BertTokenizer
+from tqdm import tqdm
 
 from config import CACHE_DIR, DATA_DIR
 
@@ -24,7 +25,7 @@ def load_graph_data(use_bert_embedding=False):
 
         print(f"Loading cached features from {CACHE_DIR}")
 
-    except:
+    except FileNotFoundError:
         print("Calculating features and adjacency matrix")
         graph_indicator = np.loadtxt(f"{DATA_DIR}/graph_indicator.txt", dtype=np.int64)
         _, graph_size = np.unique(graph_indicator, return_counts=True)
@@ -69,7 +70,7 @@ def load_graph_data(use_bert_embedding=False):
         edge_features = []
         idx_n = 0
         idx_m = 0
-        for i in range(graph_size.size):
+        for i in tqdm(range(graph_size.size)):
             adj.append(A[idx_n:idx_n+graph_size[i],idx_n:idx_n+graph_size[i]])
             edge_features.append(edge_attr[idx_m:idx_m+adj[i].nnz,:])
     
