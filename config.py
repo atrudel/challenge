@@ -19,7 +19,7 @@ if KAGGLE:
 
 # In a local environment, config variables can be overriden with a .env file at the root of the repository
 else:
-    DATA_DIR = config('DATA_DIR', default='/content/drive/MyDrive/_MVA/ALTEGRAD/Project/data')
+    DATA_DIR = config('DATA_DIR', default=ROOT_DIR/'data')
     OUTPUT_DIR = config('OUTPUT_DIR', default=ROOT_DIR/'output')
     CACHE_DIR = config('CACHE_DIR', default=ROOT_DIR/'cache')
     CHECKPOINT_DIR = config('CHECKPOINT_DIR', default=ROOT_DIR/'checkpoints')
