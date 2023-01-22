@@ -25,8 +25,8 @@ def write_submission_file(y_pred_proba, proteins_test, filename='submission.csv'
             writer.writerow(lst)
 
 
-def generate_predictions(model, experiment_name, batch_size=32):
-    test_dataloader = get_test_dataloader(batch_size)
+def generate_predictions(model, experiment_name, batch_size=32, use_bert_embedding=False):
+    test_dataloader = get_test_dataloader(batch_size, use_bert_embedding=use_bert_embedding)
     model.eval()
     model.to(device)
     y_pred_proba = list()
