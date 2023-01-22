@@ -53,7 +53,7 @@ class GCN(torch.nn.Module):
         x = self.dropout(x)
 
         # Hidden layers
-        x = self.hidden_layers(x, edge_index)
+        x = self.hidden_layers((x, edge_index))
 
 
         # Last conv layer
