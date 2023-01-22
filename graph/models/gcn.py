@@ -53,7 +53,7 @@ class GCN(torch.nn.Module):
 
         # Hidden layers
         for hidden_conv in self.hidden_layers:
-            print(x.device, print(hidden_conv.device))
+            print(x.device)
             x = self.relu(hidden_conv(x, edge_index))
             x = self.dropout(x)
 
