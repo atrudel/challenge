@@ -33,7 +33,7 @@ class GCN(torch.nn.Module):
                 out_channels=hparams['hidden_dim'],
             ),
             nn.ReLU(),
-            self.dropout()] * hparams['num_hidden_layers'])
+            self.dropout] * hparams['num_hidden_layers'])
 
         self.last_conv = GCNConv(
                 in_channels=hparams['hidden_dim'],
