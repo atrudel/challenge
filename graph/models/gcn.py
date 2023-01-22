@@ -44,19 +44,19 @@ class GCN(torch.nn.Module):
 
 
     def forward(self, data):
-        x, edge_index, edge_type, batch = data.x, data.edge_index, data.edge_type, data.batch
+        x, edge_index, batch = data.x, data.edge_index, data.batch
 
         # First conv layer
-        x = F.relu(self.first_conv(x, edge_index, edge_type))
+        x = F.relu(self.first_conv(x, edge_index))
         x = self.dropout(x)
 
         # Hidden layers
         for hidden_conv in self.hidden_layers:
-            x = F.relu(hidden_conv(x, edge_index, edge_type))
+            x = F.relu(hidden_conv(x, edge_index))
             x = self.dropout(x)
 
         # Last conv layer
-        x = self.last_conv(x, edge_index, edge_type)
+        x = self.last_conv(x, edge_index)
 
         # Pooling
         x = global_add_pool(x, batch)
