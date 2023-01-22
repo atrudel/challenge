@@ -79,8 +79,7 @@ def launch_experiment(model, hparams, experiment_name=None, seed=None, search=Fa
     train_data_loader, val_data_loader = get_train_val_dataloaders(hparams['batch_size'], val_size=0.20, random_state=seed, use_bert_embedding=use_bert_embedding)
 
     model.to(device)
-    #optimizer = optim.Adam(model.parameters(), lr=hparams['learning_rate'], weight_decay=1e-4)
-    optimizer = optim.SGD(model.parameters(), lr=hparams['learning_rate'], momentum=0.9, nesterov=True, weight_decay=1e-4)
+    optimizer = optim.Adam(model.parameters(), lr=hparams['learning_rate'], weight_decay=1e-4)
     loss_function = nn.CrossEntropyLoss()
 
     # Training loop
