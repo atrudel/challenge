@@ -24,7 +24,7 @@ def load_graph_data(use_bert_embedding=False):
 
         print(f"Loading cached features from {CACHE_DIR}")
 
-    except FileNotFoundError:
+    except:
         print("Calculating features and adjacency matrix")
         graph_indicator = np.loadtxt(f"{DATA_DIR}/graph_indicator.txt", dtype=np.int64)
         _, graph_size = np.unique(graph_indicator, return_counts=True)
