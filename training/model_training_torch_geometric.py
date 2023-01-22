@@ -83,7 +83,7 @@ def launch_experiment(model, hparams, experiment_name=None, seed=None, search=Fa
     loss_function = nn.CrossEntropyLoss()
 
     # Training loop
-    best_val_loss = float('inf')
+    best_val_loss = 0
     for epoch in range(hparams['epochs']):
         train_loss, train_acc = train(epoch, model, loss_function, optimizer, train_data_loader, hparams, search)
         val_loss, val_acc = validate(epoch, model, loss_function, val_data_loader, hparams, search)
@@ -98,8 +98,8 @@ def launch_experiment(model, hparams, experiment_name=None, seed=None, search=Fa
             })
 
         # Save checkpoint if val loss improved and if not in hyperaparameter search
-        elif val_loss < best_val_loss:
-            best_val_loss = val_loss
+        elif val_acc > best_val_loss:
+            best_val_acc = val_acc
             save_dir = f"{CHECKPOINT_DIR}/{experiment_name}"
             os.makedirs(save_dir, exist_ok=True)
             save_path = f"{save_dir}/model_epoch={epoch}_val-loss={val_loss:.3f}.pth"
