@@ -37,7 +37,7 @@ if __name__ == '__main__':
     from graph.models.rgcn import RGCN
     from training.model_training_torch_geometric import launch_experiment
 
-    num_samples = 40
+    num_samples = 20
     hparams = {
         'epochs': 10,
         'batch_size': tune.choice([32, 64, 128]),
@@ -47,9 +47,10 @@ if __name__ == '__main__':
         'num_relations': 4,
         'num_bases': tune.choice([10, 20, 30]),
         'num_blocks': None,
-        'hidden_dim': tune.choice([56, 64, 72]),
-        'dropout': 0.2,
-        'aggr': 'mean'
+        'hidden_dim': tune.choice([56, 64, 72, 84]),
+        'dropout': tune.uniform(0, 0.5),
+        'aggr': 'mean',
+        'pooling': tune.choice(['max', 'sum', 'mean'])
     }
     resources = {"cpu": 1}
 

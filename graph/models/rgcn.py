@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch_geometric.nn import RGCNConv
+from torch_geometric.nn import RGCNConv, global_mean_pool, global_max_pool
 from torch_geometric.nn import global_add_pool
 
 N_CLASSES = 18
@@ -18,7 +18,14 @@ hparams = {
     'num_blocks': None,
     'hidden_dim': 56,
     'dropout': 0.2,
-    'aggr': 'mean'
+    'aggr': 'mean',
+    'pooling': 'mean'
+}
+
+pooling_functions = {
+    'mean': global_mean_pool,
+    'sum': global_add_pool,
+    'max': global_max_pool
 }
 
 class RGCN(torch.nn.Module):
@@ -55,6 +62,7 @@ class RGCN(torch.nn.Module):
         self.fc2 = nn.Linear(hparams['hidden_dim'], N_CLASSES)
         self.dropout = nn.Dropout(hparams['dropout'])
         self.bn = nn.BatchNorm1d(hparams['hidden_dim'])
+        self.pooling = pooling_functions[hparams['pooling']]
 
 
     def forward(self, data):
@@ -70,7 +78,7 @@ class RGCN(torch.nn.Module):
         x = self.last_conv(x, edge_index, edge_type)
 
         # Global pooling
-        x = global_add_pool(x, batch)
+        x = self.pooling(x, batch)
 
         # Batch normalization
         x = self.bn(x)
@@ -79,3 +87,4 @@ class RGCN(torch.nn.Module):
         x = self.dropout(x)
         x = self.fc2(x)
         return F.log_softmax(x, dim=1)
+
