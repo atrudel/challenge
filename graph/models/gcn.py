@@ -14,7 +14,8 @@ hparams = {
     'learning_rate': 0.001,
     'num_node_features': 86,
     'hidden_dim': 128,
-    'dropout': 0.2
+    'dropout': 0.2,
+    'num_hidden_layers': 4
 }
 
 
