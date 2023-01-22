@@ -5,11 +5,13 @@ import numpy as np
 import torch
 from scipy import sparse as sp
 from sklearn.model_selection import train_test_split as sk_train_test_split
+from transformers import BertModel, BertTokenizer
+from tqdm import tqdm
 
 from config import CACHE_DIR, DATA_DIR
 
 
-def load_graph_data():
+def load_graph_data(use_bert_embedding=False):
     """
     Function that loads graphs
     """
@@ -20,6 +22,7 @@ def load_graph_data():
             node_features = pickle.load(f)
         with open(f'{CACHE_DIR}/edge_features.pickle', 'rb') as f:
             edge_features = pickle.load(f)
+
         print(f"Loading cached features from {CACHE_DIR}")
 
     except FileNotFoundError:
@@ -36,21 +39,59 @@ def load_graph_data():
         edges,idx_unique =  np.unique(edges, axis=0, return_index=True)
         A = sp.csr_matrix((np.ones(edges.shape[0]), (edges[:,0], edges[:,1])), shape=(graph_indicator.size, graph_indicator.size))
 
-        x = np.loadtxt(f"{DATA_DIR}/node_attributes.txt", delimiter=",")
         edge_attr = np.loadtxt(f"{DATA_DIR}/edge_attributes.txt", delimiter=",")
         edge_attr = np.vstack((edge_attr,edge_attr))
         edge_attr = edge_attr[idx_sort,:]
         edge_attr = edge_attr[idx_unique,:]
+
+        if use_bert_embedding:
+            # Read sequences
+            sequences = list()
+            with open(f'{DATA_DIR}/sequences.txt', 'r') as f:
+                for line in f:
+                    sequences.append(line[:-1])
+            # Add space to sequences to tokenize
+            sequences_space = []
+            for seq in sequences:
+                sequences_space.append(' '.join(seq))
+        
+            # Load ProtBERT model and tokenizer
+            model = BertModel.from_pretrained("Rostlab/prot_bert")
+            model.cuda()
+            model.eval()
+            tokenizer = BertTokenizer.from_pretrained("Rostlab/prot_bert", do_lower_case=False)
+            
+        else:
+            # Load txt file
+            x = np.loadtxt(f"{DATA_DIR}/node_attributes.txt", delimiter=",")
 
         adj = []
         node_features = []
         edge_features = []
         idx_n = 0
         idx_m = 0
-        for i in range(graph_size.size):
+        for i in tqdm(range(graph_size.size)):
             adj.append(A[idx_n:idx_n+graph_size[i],idx_n:idx_n+graph_size[i]])
             edge_features.append(edge_attr[idx_m:idx_m+adj[i].nnz,:])
-            node_features.append(x[idx_n:idx_n+graph_size[i],:])
+    
+            if use_bert_embedding:
+                # Create embeddings with ProtBERT               
+                with torch.no_grad():
+                    # Get sequences
+                    seq_batch = [sequences_space[i]]
+                    # Tokenize sequences (no padding and batch size of 1 to get the per residue embedding)
+                    token_encoding = tokenizer(seq_batch)
+                    input_ids = torch.tensor(token_encoding['input_ids']).cuda()
+                    attention_mask = torch.tensor(token_encoding['attention_mask']).cuda()
+
+                    output = model(input_ids, attention_mask=attention_mask)
+                    # Remove Start of sentence and End of sentence tokens
+                    embedding = output.last_hidden_state[:, 1:-1, :].detach().cpu().numpy().squeeze()
+                    node_features.append(embedding)         
+            else:
+                # Node embeddings from raw data
+                node_features.append(x[idx_n:idx_n+graph_size[i],:])
+                
             idx_n += graph_size[i]
             idx_m += adj[i].nnz
 

@@ -68,7 +68,7 @@ def validate(epoch, model, loss_function, data_loader, hparams, search=False):
 
 
 
-def launch_experiment(model, hparams, experiment_name=None, seed=None, search=False):
+def launch_experiment(model, hparams, experiment_name=None, seed=None, search=False, use_bert_embedding=False):
     if not search:
         if experiment_name is None:
             experiment_name = "experiment"
@@ -76,14 +76,15 @@ def launch_experiment(model, hparams, experiment_name=None, seed=None, search=Fa
         print(f"Launching new experiment {experiment_name}")
         print(f"Using {device}")
 
-    train_data_loader, val_data_loader = get_train_val_dataloaders(hparams['batch_size'], val_size=0.25, random_state=seed)
+    train_data_loader, val_data_loader = get_train_val_dataloaders(hparams['batch_size'], val_size=0.20, random_state=seed, use_bert_embedding=use_bert_embedding)
 
     model.to(device)
-    optimizer = optim.Adam(model.parameters(), lr=hparams['learning_rate'])
+    #optimizer = optim.Adam(model.parameters(), lr=hparams['learning_rate'], weight_decay=1e-4)
+    optimizer = optim.SGD(model.parameters(), lr=hparams['learning_rate'], momentum=0.9, nesterov=True, weight_decay=1e-4)
     loss_function = nn.CrossEntropyLoss()
 
     # Training loop
-    best_val_loss = float('inf')
+    best_val_acc = 0
     for epoch in range(hparams['epochs']):
         train_loss, train_acc = train(epoch, model, loss_function, optimizer, train_data_loader, hparams, search)
         val_loss, val_acc = validate(epoch, model, loss_function, val_data_loader, hparams, search)
@@ -98,8 +99,8 @@ def launch_experiment(model, hparams, experiment_name=None, seed=None, search=Fa
             })
 
         # Save checkpoint if val loss improved and if not in hyperaparameter search
-        elif val_loss < best_val_loss:
-            best_val_loss = val_loss
+        elif val_acc > best_val_acc:
+            best_val_acc = val_acc
             save_dir = f"{CHECKPOINT_DIR}/{experiment_name}"
             os.makedirs(save_dir, exist_ok=True)
             save_path = f"{save_dir}/model_epoch={epoch}_val-loss={val_loss:.3f}.pth"

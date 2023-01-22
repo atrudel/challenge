@@ -43,6 +43,7 @@ class GAT(nn.Module):
         x = self.first_gat(x, edge_index, edge_attr)
         x = F.elu(x)
         x = self.bn(x)
+        x = self.dropout(x)
 
         x = self.last_gat(x, edge_index, edge_attr)
 
