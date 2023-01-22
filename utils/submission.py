@@ -3,6 +3,7 @@ import csv
 from config import OUTPUT_DIR
 from graph.data_handling.dataset_featurizer import get_test_dataloader
 from datetime import datetime
+import os
 import pytz
 import torch
 from config import device
@@ -11,6 +12,7 @@ from config import device
 def write_submission_file(y_pred_proba, proteins_test, filename='submission.csv'):
     assert y_pred_proba.shape == (1223, 18), f"Incorrect dimensions for predict_proba: {y_pred_proba.shape}. Expected (1224, 18)."
     filepath = f'{OUTPUT_DIR}/{filename}'
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
     print(f"Generating submission file: {filepath}")
     with open(filepath, 'w') as csvfile:
         writer = csv.writer(csvfile, delimiter=',')
@@ -25,8 +27,8 @@ def write_submission_file(y_pred_proba, proteins_test, filename='submission.csv'
             writer.writerow(lst)
 
 
-def generate_predictions(model, experiment_name, batch_size=32):
-    test_dataloader = get_test_dataloader(batch_size)
+def generate_predictions(model, experiment_name, batch_size=32, use_bert_embedding=False):
+    test_dataloader = get_test_dataloader(batch_size, use_bert_embedding=use_bert_embedding)
     model.eval()
     model.to(device)
     y_pred_proba = list()
