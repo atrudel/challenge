@@ -17,9 +17,10 @@ class ProteinDataset(InMemoryDataset):
         into raw_dir (downloaded dataset) and processed_dir (processed data).
         """
         self.test = test
+        self.use_bert_embedding = use_bert_embedding
         super().__init__(root, transform, pre_transform, use_bert_embedding)
         self.data, self.slices = torch.load(self.processed_paths[0])
-        self.use_bert_embedding = use_bert_embedding
+
 
     @property
     def raw_file_names(self):

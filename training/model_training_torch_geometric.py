@@ -76,7 +76,7 @@ def launch_experiment(model, hparams, experiment_name=None, seed=None, search=Fa
         print(f"Launching new experiment {experiment_name}")
         print(f"Using {device}")
 
-    train_data_loader, val_data_loader = get_train_val_dataloaders(hparams['batch_size'], val_size=0.25, random_state=seed, use_bert_embedding=use_bert_embedding)
+    train_data_loader, val_data_loader = get_train_val_dataloaders(hparams['batch_size'], val_size=0.20, random_state=seed, use_bert_embedding=use_bert_embedding)
 
     model.to(device)
     optimizer = optim.Adam(model.parameters(), lr=hparams['learning_rate'])
