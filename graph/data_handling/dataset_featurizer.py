@@ -91,8 +91,8 @@ def get_train_val_dataloaders(batch_size, val_size=0.25, random_state=None, use_
     val_dataloader = DataLoader(val_subset, batch_size=batch_size, shuffle=False)
     return train_dataloader, val_dataloader
 
-def get_full_train_dataloader(batch_size):
-    return DataLoader(ProteinDataset(test=False), batch_size=batch_size, shuffle=True)
-def get_test_dataloader(batch_size):
-    return DataLoader(ProteinDataset(test=True), batch_size=batch_size, shuffle=False)
+def get_full_train_dataloader(batch_size, use_bert_embedding=False):
+    return DataLoader(ProteinDataset(test=False, use_bert_embedding=use_bert_embedding), batch_size=batch_size, shuffle=True)
+def get_test_dataloader(batch_size, use_bert_embedding=False):
+    return DataLoader(ProteinDataset(test=True, use_bert_embedding=use_bert_embedding), batch_size=batch_size, shuffle=False)
 

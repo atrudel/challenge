@@ -116,7 +116,7 @@ def launch_experiment(model, hparams, experiment_name=None, seed=None, search=Fa
                 'hparams': hparams
             }
             torch.save(checkpoint, save_path)
-    return best_val_loss
+    return best_val_acc
 
 
 def train_without_validation(model, hparams, epochs, experiment_name=None, seed=42):
