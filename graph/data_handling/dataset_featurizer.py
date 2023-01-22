@@ -11,7 +11,7 @@ from graph.data_handling.baseline_data_processing import load_graph_data, train_
 from sklearn.model_selection import train_test_split as sk_train_test_split
 
 class ProteinDataset(InMemoryDataset):
-    def __init__(self, root=DATA_DIR, test=False, transform=None, pre_transform=None):
+    def __init__(self, root=DATA_DIR, test=False, transform=None, pre_transform=None, use_bert_embedding=False):
         """
         root = Where the dataset should be stored. This folder is split
         into raw_dir (downloaded dataset) and processed_dir (processed data).
@@ -19,6 +19,7 @@ class ProteinDataset(InMemoryDataset):
         self.test = test
         super().__init__(root, transform, pre_transform)
         self.data, self.slices = torch.load(self.processed_paths[0])
+        self.use_bert_embedding = use_bert_embedding
 
     @property
     def raw_file_names(self):
@@ -36,7 +37,7 @@ class ProteinDataset(InMemoryDataset):
         else:
             return ['train_graph_data.pt']
     def process(self):
-        adj, node_features, edge_features = load_graph_data()
+        adj, node_features, edge_features = load_graph_data(self.use_bert_embedding)
         (adj_train, node_features_train, edge_features_train), y_train, \
             (adj_test, node_features_test, edge_features_test), proteins_test = train_test_split(
             adj, node_features, edge_features, val_size=0
@@ -73,8 +74,8 @@ class ProteinDataset(InMemoryDataset):
             graphs.append(graph)
         return graphs
 
-def get_train_val_dataloaders(batch_size, val_size=0.25, random_state=None):
-    full_train_dataset = ProteinDataset(test=False)
+def get_train_val_dataloaders(batch_size, val_size=0.25, random_state=None, use_bert_embedding=False):
+    full_train_dataset = ProteinDataset(test=False, use_bert_embedding=use_bert_embedding)
     train_indices, val_indices, _, _  = sk_train_test_split(
         range(len(full_train_dataset)),
         full_train_dataset.data.y,
